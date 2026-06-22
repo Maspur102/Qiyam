@@ -13,13 +13,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Mengambil kode dari repository kamu
+      # 1. Mengambil kode dari repository menggunakan versi v4 (Terbaru)
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # 2. Menyiapkan Java (Dibutuhkan untuk build Android)
+      # 2. Menyiapkan Java (Dibutuhkan untuk build Android) menggunakan versi v4
       - name: Setup Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
@@ -28,10 +28,10 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.0' # Kamu bisa sesuaikan dengan versi terbarumu
+          # Pastikan channel 'stable' digunakan agar mendownload versi terbaru dan paling aman
           channel: 'stable'
 
-      # 4. Mendownload semua package
+      # 4. Mendownload semua package yang kita atur di pubspec.yaml
       - name: Install Dependencies
         run: flutter pub get
 
@@ -39,9 +39,9 @@ jobs:
       - name: Build APK Release
         run: flutter build apk --release
 
-      # 6. Mengunggah file APK agar bisa kamu download dari menu Actions di GitHub
+      # 6. Mengunggah file APK menggunakan artifact versi v4 (Terbaru)
       - name: Upload APK
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: qiyam-release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
