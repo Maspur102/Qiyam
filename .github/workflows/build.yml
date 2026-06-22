@@ -1,0 +1,47 @@
+name: Build Flutter APK
+
+# Menjalankan build otomatis setiap ada push ke branch main atau master
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Mengambil kode dari repository kamu
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # 2. Menyiapkan Java (Dibutuhkan untuk build Android)
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      # 3. Menyiapkan instalasi Flutter di server GitHub
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0' # Kamu bisa sesuaikan dengan versi terbarumu
+          channel: 'stable'
+
+      # 4. Mendownload semua package
+      - name: Install Dependencies
+        run: flutter pub get
+
+      # 5. Membuat file APK
+      - name: Build APK Release
+        run: flutter build apk --release
+
+      # 6. Mengunggah file APK agar bisa kamu download dari menu Actions di GitHub
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: qiyam-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
