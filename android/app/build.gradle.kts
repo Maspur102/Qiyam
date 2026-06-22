@@ -22,6 +22,9 @@ android {
     namespace = "com.maspur102.qiyam"
     compileSdk = flutter.compileSdkVersion
 
+    // SOLUSI BUG NDK: Menetapkan versi NDK stabil yang tidak korup saat diunduh oleh GitHub Actions
+    ndkVersion = "25.1.8937393"
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
