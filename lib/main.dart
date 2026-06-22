@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter/cupertino.dart';
 import 'core/theme/app_theme.dart';
 import 'features/dashboard/presentation/pages/dashboard_page.dart';
 
 void main() async {
-  // Wajib ditambahkan jika main() menggunakan async
+  // Wajib dipanggil untuk inisialisasi yang aman
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const QiyamApp());
 }
@@ -18,43 +19,44 @@ class QiyamApp extends StatelessWidget {
       title: 'Qiyam',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
-      // Kita arahkan ke halaman pengecekan izin terlebih dahulu
-      home: const PermissionHandlerPage(),
+      home: const WelcomePermissionPage(), // Arahkan ke halaman selamat datang
     );
   }
 }
 
-// --- HALAMAN PENGECEKAN IZIN (LOADING SCREEN) ---
-class PermissionHandlerPage extends StatefulWidget {
-  const PermissionHandlerPage({super.key});
+// --- HALAMAN SELAMAT DATANG & IZIN ---
+class WelcomePermissionPage extends StatefulWidget {
+  const WelcomePermissionPage({super.key});
 
   @override
-  State<PermissionHandlerPage> createState() => _PermissionHandlerPageState();
+  State<WelcomePermissionPage> createState() => _WelcomePermissionPageState();
 }
 
-class _PermissionHandlerPageState extends State<PermissionHandlerPage> {
-  @override
-  void initState() {
-    super.initState();
-    _checkAndRequestPermissions();
-  }
+class _WelcomePermissionPageState extends State<WelcomePermissionPage> {
+  bool _isLoading = false;
 
-  Future<void> _checkAndRequestPermissions() async {
-    // 1. Cek izin Overlay (SYSTEM_ALERT_WINDOW)
-    var overlayStatus = await Permission.systemAlertWindow.status;
-    
-    if (!overlayStatus.isGranted) {
-      // Jika belum diizinkan, minta sistem memunculkan halaman pengaturan ke pengguna
-      await Permission.systemAlertWindow.request();
+  Future<void> _requestPermissionsAndStart() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // 1. Meminta izin Kamera
+      if (!await Permission.camera.isGranted) {
+        await Permission.camera.request();
+      }
+
+      // 2. Meminta izin Overlay (Tampil di Atas Aplikasi Lain)
+      // Menggunakan delay agar sistem Android tidak kaget
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (!await Permission.systemAlertWindow.isGranted) {
+        await Permission.systemAlertWindow.request();
+      }
+    } catch (e) {
+      debugPrint("Gagal meminta izin: $e");
     }
 
-    // 2. Cek izin Kamera untuk Misi Al-Quran
-    var cameraStatus = await Permission.camera.status;
-    if (!cameraStatus.isGranted) {
-      await Permission.camera.request();
-    }
-
-    // Setelah semua izin beres, baru arahkan paksa ke Dashboard Utama
+    // 3. Pindah ke Dashboard setelah proses selesai
     if (mounted) {
       Navigator.pushReplacement(
         context,
@@ -65,24 +67,46 @@ class _PermissionHandlerPageState extends State<PermissionHandlerPage> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       backgroundColor: AppTheme.background,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(color: AppTheme.primary),
-            SizedBox(height: 20),
-            Text(
-              "Mempersiapkan Qiyam...",
-              style: TextStyle(color: AppTheme.textPrimary, fontSize: 16),
-            ),
-            SizedBox(height: 8),
-            Text(
-              "Mohon izinkan 'Tampil di atas aplikasi lain' saat diminta.",
-              style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
-            )
-          ],
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(CupertinoIcons.shield_lefthalf_fill, size: 100, color: AppTheme.primary),
+              const SizedBox(height: 32),
+              const Text(
+                "Selamat Datang di Qiyam",
+                style: TextStyle(color: AppTheme.textPrimary, fontSize: 24, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                "Agar fitur pengunci layar jadwal shalat dan tidur berfungsi maksimal, aplikasi membutuhkan izin khusus.",
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 14, height: 1.5),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 48),
+              
+              _isLoading 
+                ? const CircularProgressIndicator(color: AppTheme.primary)
+                : SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primary,
+                        foregroundColor: AppTheme.background,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      onPressed: _requestPermissionsAndStart,
+                      child: const Text("Berikan Izin & Mulai", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+            ],
+          ),
         ),
       ),
     );
