@@ -49,6 +49,7 @@ dependencies:
   # Library animasi modern dan minimalis
   flutter_animate: ^4.5.0
   image_picker: ^1.2.1
+  permission_handler: ^12.0.3
 
 dev_dependencies:
   flutter_test:
